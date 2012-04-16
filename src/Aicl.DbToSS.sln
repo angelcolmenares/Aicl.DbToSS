@@ -1,0 +1,30 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aicl.DbToSS.CSharp", "Aicl.DbToSS.CSharp\Aicl.DbToSS.CSharp.csproj", "{EBDBE346-5F58-44E9-8598-920FFF51A600}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo", "Demo\Demo.csproj", "{D46CA696-FC66-402D-86A3-64FA7BC53250}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D46CA696-FC66-402D-86A3-64FA7BC53250}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D46CA696-FC66-402D-86A3-64FA7BC53250}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D46CA696-FC66-402D-86A3-64FA7BC53250}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D46CA696-FC66-402D-86A3-64FA7BC53250}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EBDBE346-5F58-44E9-8598-920FFF51A600}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EBDBE346-5F58-44E9-8598-920FFF51A600}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EBDBE346-5F58-44E9-8598-920FFF51A600}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EBDBE346-5F58-44E9-8598-920FFF51A600}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6FFC470C-F542-4288-9576-18A0CE16D8A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6FFC470C-F542-4288-9576-18A0CE16D8A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6FFC470C-F542-4288-9576-18A0CE16D8A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6FFC470C-F542-4288-9576-18A0CE16D8A2}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = Aicl.DbToSS.CSharp\Aicl.DbToSS.CSharp.csproj
+	EndGlobalSection
+EndGlobal
