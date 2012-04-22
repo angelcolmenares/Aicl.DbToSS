@@ -156,7 +156,7 @@ namespace Aicl.DotJs.Ext
 			if(ic==2) height=140;
 			else if (ic==3) height=150;
 			else if (ic==4) height=160;
-			else if (ic>=5) height=35*ic;
+			else if (ic>=5) height=40*ic;
 			if( height>350) height=350;
 			
 			string sItems= items.SerializeAndFormat().Replace("True","true").Replace("False","false");
@@ -184,8 +184,7 @@ namespace Aicl.DotJs.Ext
 			
 			
 		}
-		
-		
+			
 	}
 }
 

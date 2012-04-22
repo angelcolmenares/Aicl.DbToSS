@@ -9,20 +9,13 @@ namespace Aicl.DotJs.Ext
 	{
 		private string template=@"Ext.define('{0}',{{
 	extend: '{1}',
-    stores: [
-        '{2}' 
-    ],  
-    models: [
-    	'{2}'
-    ],
-    views: [
-    	'{3}.List',
-    	'{3}.Form'
-    ],
+    stores: ['{2}'],  
+    models: ['{2}'],
+    views:  ['{3}.List','{3}.Form' ],
     refs:[
     	{{ref: '{3}List',    	 selector: '{3}list' }},
-    	{{ref: '{3}DeleteButton', selector: '{3}list button[action=delete]' 	}},
-    	{{ref: '{3}NewButton',    selector: '{3}list button[action=new]' 	}},
+    	{{ref: '{3}DeleteButton', selector: '{3}list button[action=delete]' }},
+    	{{ref: '{3}NewButton',    selector: '{3}list button[action=new]' }},
     	{{ref: '{3}Form',    	 selector: '{3}form' }}, 
     	{{ref: '{3}SaveButton', 	 selector: '{3}form button[action=save]' }}
     ],
@@ -32,14 +25,7 @@ namespace Aicl.DotJs.Ext
         this.control({{
             '{3}list': {{ 
                 selectionchange: function( sm,  selections,  eOpts){{
-                	if (selections.length) {{
-                		this.get{2}Form().getForm().loadRecord(selections[0]);
-                		this.get{2}DeleteButton().setDisabled(false);
-        				this.get{2}SaveButton().setText('Update');	          				
-        			}}
-        			else{{
-        				this.reset{2}Form();
-        			}}
+                	this.refreshButtons(selections);
                 }}
             }},
             
@@ -47,49 +33,88 @@ namespace Aicl.DotJs.Ext
                 click: function(button, event, options){{
                 	var grid = this.get{2}List();
                 	var record = grid.getSelectionModel().getSelection()[0];
-        			grid.getStore().remove(record);
+        			this.get{2}Store().remove(record);
                 }}
             }},
             
             '{3}list button[action=new]': {{
             	click:function(button, event, options){{
-            		this.reset{2}Form();
+            		this.get{2}List().getSelectionModel().deselectAll();
             	}}
             }},
             
-            '{3}form button[action=save]':{{
+            '{3}form button[action=save]':{{            	
             	click:function(button, event, options){{
+            		var model = this.get{2}Store();
             		var record = this.get{2}Form().getForm().getFieldValues(true);
-            		var store =this.get{2}Store();
-        			if (record.Id ){{
-           				var sr = store.getById(parseInt( record.Id) );
-						sr.beginEdit();
-						for( var r in record){{
-							sr.set(r, record[r])
-						}}
-						sr.endEdit(); 
-        			}}
-        			else{{
-          				var nr = Ext.ModelManager.create(record, this.get{2}Model().getName() );
-						store.add(nr);
-						this.get{2}List().getSelectionModel().doSingleSelect(nr,false);
-        			}}
+            		this.get{2}Store().save(record);
             	}}
             }}
-            
         }});
     }},
     
     onLaunch: function(application){{
-    	this.get{2}Store().load();
-    	this.get{2}NewButton().setDisabled(false);
-    	this.get{2}Form().setFocus();
+    	this.get{2}Store().on('write', function(store, operation, eOpts ){{
+    		var record =  operation.getRecords()[0];                                    
+            if (operation.action != 'destroy') {{
+               this.get{2}List().getSelectionModel().select(record,true,true);
+               this.refreshButtons([record]);
+            }}
+    	}}, this);
     }},
-    
-    reset{2}Form: function(){{
-        this.get{2}DeleteButton().setDisabled(true);
-        this.get{2}Form().getForm().reset();            
-        this.get{2}SaveButton().setText('Add');
+        	
+	refreshButtons: function(selections){{	
+		selections=selections||[];
+		if (selections.length){{
+			this.get{2}NewButton().setDisabled(!this.get{2}Store().canCreate());
+        	this.get{2}Form().getForm().loadRecord(selections[0]);
+            this.get{2}SaveButton().setText('Update');
+            this.get{2}DeleteButton().setDisabled(!this.get{2}Store().canDestroy());
+            this.get{2}SaveButton().setDisabled(!this.get{2}Store().canUpdate());
+        }}
+        else{{
+        	this.get{2}Form().getForm().reset();            
+        	this.get{2}SaveButton().setText('Add');
+        	this.get{2}DeleteButton().setDisabled(true);
+        	this.get{2}NewButton().setDisabled(true);
+        	this.get{2}SaveButton().setDisabled(!this.get{2}Store().canCreate());
+        	this.get{2}Form().setFocus();
+        }};
+        this.enableAll();
+	}},
+	
+	disableForm:function(){{
+		this.get{2}Form().setDisabled(true);
+	}},
+	
+	enableForm:function(){{
+		this.get{2}Form().setDisabled(false);	
+	}},
+
+	disableList:function(){{
+		this.get{2}List().setDisabled(true);
+	}},
+	
+	enableList:function(){{
+		this.get{2}List().setDisabled(false);
+	}},
+	
+	disableAll: function(){{
+		this.get{2}List().setDisabled(true);
+		this.get{2}Form().setDisabled(true);
+	}},
+	
+	enableAll: function(){{
+		this.get{2}List().setDisabled(false);
+		this.get{2}Form().setDisabled(false);
+	}},
+	
+	onselectionchange:function(fn, scope){{
+		this.get{2}List().on('selectionchange', fn, scope);
+	}},
+	
+	onwrite:function(fn, scope){{
+		this.get{2}Store().on('write', fn, scope);
 	}}
 	
 }});

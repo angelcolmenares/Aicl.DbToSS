@@ -123,6 +123,13 @@ namespace Aicl.DotJs.Ext
 				{
 					col.renderer="<FormatNumber/>";
 				}
+				else if(pi.PropertyType== typeof(bool) || pi.PropertyType== typeof(bool?))
+				{
+					col.xtype="'booleancolumn'";
+					col.trueText= "'Si'";
+					col.falseText= "'No'";
+					col.align="'center'";
+				}
 				
 				cols.Add(col);
 			}

@@ -17,5 +17,18 @@ namespace Aicl.DotJs.Ext
 		
 		public object renderer { get; set;}
 		
+		public string xtype {get; set;}
+		
+		public string trueText {get; set;}
+		
+		public string falseText {get; set;}
+		
+		public string align {get; set;}
 	}
+	
 }
+/*
+ 
+ {text: 'Department (Yrs)', xtype:'templatecolumn', tpl:'{dep} ({senority})'}
+ 
+ */ 

@@ -8,18 +8,14 @@ namespace Aicl.DotJs.Ext
 	{
 		private string template=@"Ext.Loader.setConfig({{enabled: true}});
 Ext.Loader.setPath('{0}', '../app');
-Ext.require(['Ext.tip.*']);
-Ext.QuickTips.init();
     
 Ext.application({{
 name: '{0}',
 appFolder: '../app',
-
 launch: function(){{
     Ext.create('Ext.form.Panel',{{
   	width:990,
     id:'panelModule',
-    //baseCls:'x-plain',
     frame: true,
     renderTo: 'module',
     layout: {{
@@ -42,6 +38,9 @@ launch: function(){{
 		}}
     ]
     }});
+    var controller =this.getController('{2}');
+    controller.get{2}Store().load();
+    controller.refreshButtons();
 }},
     
 controllers: ['{2}']

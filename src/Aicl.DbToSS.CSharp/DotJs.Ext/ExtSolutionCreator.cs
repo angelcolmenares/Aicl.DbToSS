@@ -156,7 +156,36 @@ namespace Aicl.DotJs.Ext
 				twp.Close();
 			}
 			
+			string loginAppDir= Path.Combine(modulesDir,"login");
+			if(! Directory.Exists(loginAppDir))
+				Directory.CreateDirectory(loginAppDir);
+			
+			using (TextWriter twp = new StreamWriter(Path.Combine(loginAppDir,"app.js")))
+			{
+				twp.Write(string.Format(loginAppTemplate, AppName));				
+				twp.Close();
+			}
+							
+			string loginViewDir= Path.Combine( Path.Combine(modulesDir,"app"), "view");
+			if(! Directory.Exists(loginViewDir))
+				Directory.CreateDirectory(loginViewDir);
+			
+			using (TextWriter twp = new StreamWriter(Path.Combine(loginViewDir,"Login.js")))
+			{
+				twp.Write(string.Format(loginViewTemplate, AppName));				
+				twp.Close();
+			}
 	
+			string loginControllerDir= Path.Combine( Path.Combine(modulesDir,"app"), "controller");
+			if(! Directory.Exists(loginControllerDir))
+				Directory.CreateDirectory(loginControllerDir);
+			
+			using (TextWriter twp = new StreamWriter(Path.Combine(loginControllerDir,"Login.js")))
+			{
+				twp.Write(string.Format(loginControllerTemplate, AppName));				
+				twp.Close();
+			}
+			
 		}
 		
 		private string appTemplate=@"Ext.require(['*']);
@@ -362,7 +391,7 @@ Ext.onReady(function() {{
     <link rel=""stylesheet"" type=""text/css"" href=""resources/util.css""/>
 	<script type=""text/javascript"" src=""extjs/bootstrap.js""></script>
 	<script type=""text/javascript"" src=""resources/util.js""></script>
-    <script type=""text/javascript"" src=""app.js"" ></script>
+    <script type=""text/javascript"" src=""modules/login/app.js"" ></script>
 </head>
 <body></body>
 </html>";
@@ -370,13 +399,27 @@ Ext.onReady(function() {{
 		private string utilJsTemplate=@"(function(){{
 	Ext.ns('Aicl.Util');
 	Aicl.Util = {{}}; 
-
+	
 	var Util = Aicl.Util, 
 		_msgCt, 
 		_createBox= function (title, content){{
        		return '<div class=""msg""><h3>' + title + '</h3><p>' + content + '</p></div>';
     	}};
-        
+    	
+    _registerSession=function(result){{
+		sessionStorage[""authenticated""]= true;
+		sessionStorage[""roles""]=Ext.encode(result.Roles);
+		sessionStorage[""permissions""]=Ext.encode(result.Permissions);
+		sessionStorage[""displayName""]=result.DisplayName;				
+	}};
+
+	_clearSession=function(result){{
+		sessionStorage[""authenticated""]= false;
+		sessionStorage.removeItem(""roles"");
+		sessionStorage.removeItem(""permissions"");
+		sessionStorage.removeItem(""displayName"");
+	}};
+	        
     Ext.apply(Util,{{
     	
     	convertToDate: function (v){{
@@ -486,12 +529,14 @@ Ext.onReady(function() {{
 			for( p in params){{
 				s= Ext.String.urlAppend(s, Ext.String.format('{{0}}={{1}}', p, params[p]));
 			}};
-			return s;			
+			return s;
+			
 		}},
 		
 		// proxies
 			
 		createRestProxy:function (config){{
+			
 			config.format=config.format|| 'json';
 			config.type= config.type || 'rest';
 			
@@ -503,6 +548,7 @@ Ext.onReady(function() {{
 			config.url= config.url || Aicl.Util.getUrlApi()+'/' + config.storeId;
 			
 			return this.createProxy(config);
+			
 		}},
 		
 		createAjaxProxy:function (config){{
@@ -578,17 +624,60 @@ Ext.onReady(function() {{
 		    }};
 		    return proxy;
 		}},
-		
-		// auth 
-		setAuth:function (trueOrFalse){{
-			 sessionStorage[""authenticated""]= trueOrFalse;
-		}},
-		
+				
 		isAuth: function (){{
 			var v = sessionStorage[""authenticated""]
 			return v==undefined? false: Ext.decode(v);
 		}},
+				
+		login: function(config){{
+			this.executeRestRequest({{
+				url : Aicl.Util.getUrlLogin(),
+				method : 'get',
+				success : function(result) {{
+					_registerSession(result);
+					if(config.success) config.success(result);
+				}},
+				failure : config.failure,
+				callback: config.callback,
+				params : config.params
+			}});
+		}},
+				
+		logout: function(config){{
+			config=config||{{}};
+			this.executeRestRequest({{
+				url : Aicl.Util.getUrlLogout()+'?format=json',
+				method : 'delete',
+				callback : function(result, success) {{
+					_clearSession();
+					if(config.callback) config.callback(result,success);
+				}},
+				failure : config.failure,
+				success : config.success
+			}});
+		}},
+				
+		getRoles:function(){{
+			return sessionStorage.roles? Ext.decode(sessionStorage.roles): [];		
+		}},
 		
+		setUrlLogin: function (urlLogin){{
+			sessionStorage[""urlLogin""]=urlLogin;
+		}},
+		
+		getUrlLogin:function (){{
+			return sessionStorage[""urlLogin""];
+		}},
+		
+		setUrlLogout: function (urlLogout){{
+			sessionStorage[""urlLogout""]=urlLogout;
+		}},
+		
+		getUrlLogout:function (){{
+			return sessionStorage[""urlLogout""];
+		}},
+				
 		setUrlApi: function (urlApi){{
 			sessionStorage[""urlApi""]=urlApi;
 		}},
@@ -621,11 +710,20 @@ Ext.onReady(function() {{
 			return sessionStorage[""emptyImgUrl""];
 		}},
 		
-		checkRole:function (role){{
-			var a= sessionStorage.roles? Ext.decode(sessionStorage.roles): [];
-			return a.indexOf(role)>0;
+		hasRole:function (role){{
+			var roles= this.getRoles();
+			for(var r in roles){{
+ 			  if (roles[r].Name==role) return true;
+			}};
+			return false;
 		}},
-				
+		
+		hasPermission:function (permission){{
+			var a= sessionStorage.permissions? Ext.decode(sessionStorage.permissions): [];
+			return a.indexOf(permission)>=0;
+		}},
+		
+		
 		//helpers
 		isValidEmail:function (email) {{
 			var filter = /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{{2,4}})+$/;
@@ -665,7 +763,7 @@ Ext.define('Aicl.data.Store',{{
             write: (config.listeners && config.listeners.write)?
             config.listeners.write(store, operation, options):
             function(store, operation, options){{
-            	console.log('store'+ this.storeId+ '  write arguments: ', arguments); 
+            	//console.log('store'+ this.storeId+ '  write arguments: ', arguments); 
                 var record =  operation.getRecords()[0],
                     name = Ext.String.capitalize(operation.action),
                     verb;                                
@@ -675,10 +773,11 @@ Ext.define('Aicl.data.Store',{{
                 }} else {{
                     verb = name + 'd';
                 }}
-                console.log('store'+ this.storeId +' write record: ', record);
+                //console.log('store'+ this.storeId +' write record: ', record);
                 Aicl.Util.msg(name, Ext.String.format(""{{0}} {{1}}: {{2}}"", verb, this.storeId , record.getId()));
             }}
         }};
+        
         this.callParent(arguments);
     }}
 }});  
@@ -697,7 +796,41 @@ Ext.data.Store.implement({{
   		this.remove(this.getNewRecords());
    		//this.each(function(record) {{   		//	record.reject();  		//}}, this);
    		this.removed = [];
-    }}
+    }},
+    //record={{somefield:'value', othefield:'value'}}
+    save:function(record){{
+		if (record.Id){{
+			var keys = Ext.create( this.model.getName(),{{}}).fields.keys;
+			var sr = this.getById(parseInt( record.Id) );
+			sr.beginEdit();
+			for( var r in record){{
+				if( keys.indexOf(r)>0 )
+					sr.set(r, record[r])
+			}}
+			sr.endEdit(); 
+		}}
+		else{{
+			var nr = Ext.create( this.model.getName(),record );
+			this.add(nr);
+		}}			
+	}},
+	
+	canCreate:function(){{
+		 return Aicl.Util.hasPermission(Ext.String.format('{{0}}.create', this.storeId));
+	}},
+    canRead:function(){{
+		 return Aicl.Util.hasPermission(Ext.String.format('{{0}}.read', this.storeId));
+	}},
+	canUpdate:function(){{
+		 return Aicl.Util.hasPermission(Ext.String.format('{{0}}.update', this.storeId));
+	}},
+	canDestroy:function(){{
+		 return Aicl.Util.hasPermission(Ext.String.format('{{0}}.destroy', this.storeId));
+	}},
+	canExecute:function(operation){{
+		 return Aicl.Util.hasPermission(Ext.String.format('{{0}}.{{1}}', this.storeId,operation));
+	}}
+    
 }});
 
 Ext.form.Panel.implement({{
@@ -705,8 +838,8 @@ Ext.form.Panel.implement({{
     	var ff = item==undefined?this.items.items[1].name:Ext.isNumber(item)?this.items.items[item].name:item;
     	this.getForm().findField(ff).focus(false,10);
     }}
-}});
-";
+}});";
+		
 		private string utilCssTemplate=@"body {{
     padding:5px;
     padding-top:5px;
@@ -848,8 +981,58 @@ pre.code{{
 #module{{
 	margin-left:auto;
 	margin-right:auto;
-	width: 70em;
+	width: 75em;
 	text-align: left;
+}}
+
+// Login form 
+.form-login-icon-title {{
+    background-image: url(""icons/silk/locked.png"")
+}}
+
+.form-login-header {{
+    background: transparent url(""icons/silk/lock.png"") no-repeat 97% 50%;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 10px 45px 10px 10px;
+}}
+
+.form-login-header .error {{
+    color: red;
+}}
+
+.form-login-icon-login {{
+    background-image: url(""icons/silk/login.png"")
+}}
+
+.form-login-icon-cancel {{
+    background-image: url(""icons/silk/close.png"")
+}}
+
+.form-login-warning {{
+    background: url(""icons/silk/warning.png"") no-repeat center left;
+    padding: 2px;
+    padding-left: 20px;
+    font-weight: bold;
+}}
+
+// Navigation 
+
+.expand {{
+    background-image: url('icons/silk/expand.png') !important;
+}}
+
+.collapse {{
+    background-image: url('icons/silk/collapse.png') !important;
+}}
+
+.datalink div{{
+   text-decoration: underline;
+    cursor: pointer;
+}}
+
+.logout {{
+    background-image: url('icons/silk/logout.png') !important;
 }}";
 		
 		private string introTemplate=@"<html>
@@ -874,8 +1057,274 @@ This library is distributed in the hope that it will be useful, but WITHOUT ANY 
 without even the implied warranty of MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT OF THIRD-PARTY INTELLECTUAL PROPERTY RIGHTS.
 See the GNU General Public License for more details.";
 
+		
+		private string loginAppTemplate=@"Ext.Loader.setConfig({{enabled: true}});
+Ext.Loader.setPath('{0}', 'modules/app');
+    
+Ext.application({{
+name: '{0}',
+appFolder: 'modules/app',
 
+launch: function(){{
+	Aicl.Util.setUrlApi(location.protocol + '//' + location.host + '/api');
+	Aicl.Util.setHttpUrlApi(location.protocol + '//' + location.host + '/api'+'/json/asynconeway')
+		
+	Aicl.Util.setUrlLogin(location.protocol + '//' + location.host + '/api/login');
+	Aicl.Util.setUrlLogout(location.protocol + '//' + location.host + '/api/logout');
+	
+	Aicl.Util.setPhotoDir(location.protocol + '//' + location.host +  '' + location.pathname+ 'photos');
+	Aicl.Util.setEmptyImgUrl('../../resources/icons/fam/user.png');
+    var loginWin = Ext.create('App.view.Login');
+    loginWin.show();
+}},
+    
+controllers: ['Login']
+    
+}});  
+";
+		private string loginViewTemplate=@"Ext.define('{0}.view.Login', {{
+    extend:'Ext.window.Window',
+    alias:'widget.login',
+    iconCls:'form-login-icon-title',
+    width:420,
+    height:210,
+    resizable:false,
+    closable:false,
+    draggable:false,
+    modal:true,
+    closeAction:'hide',
+    layout:'border',
+    title:'Login',
+
+    initComponent:function () {{
+
+        Ext.apply(this, {{
+            items:[
+                {{
+                    xtype:'panel',
+                    cls:'form-login-header',
+                    baseCls:'x-plain',
+                    //html:'intro',
+                    region:'north',
+                    height:60
+                }},
+                {{
+                    xtype:'form',
+                    baseCls:'x-plain',
+                    ui:'default-framed',
+                    bodyPadding:10,
+                    header:false,
+                    region:'center',
+                    border:false,
+                    waitMsgTarget:true,
+                    layout:{{
+                        type:'vbox',
+                        align:'stretch'
+                    }},
+                    defaults:{{
+                        labelWidth:85
+                    }},
+                    items:[
+                        {{
+                            itemId:'userName',
+                            xtype:'textfield',
+                            fieldLabel:'Username',
+                            name:'userName',
+                            allowBlank:false,
+                            anchor:'100%',
+                            validateOnBlur:false
+                        }},
+                        {{
+                            xtype:'textfield',
+                            fieldLabel:'Password',
+                            name:'password',
+                            allowBlank:false,
+                            inputType:'password',
+                            anchor:'100%',
+                            validateOnBlur:false,
+                            enableKeyEvents:true,
+                            listeners:{{
+                                render:{{
+                                    fn:function (field, eOpts) {{
+                                        field.capsWarningTooltip = Ext.create('Ext.tip.ToolTip', {{
+                                            target:field.bodyEl,
+                                            anchor:'top',
+                                            width:305,
+                                            html:'Caps lock warning'
+                                        }});
+
+                                        // disable to tooltip from showing on mouseover
+                                        field.capsWarningTooltip.disable();
+                                    }},
+                                    scope:this
+                                }},
+
+                                keypress:{{
+                                    fn:function (field, e, eOpts) {{
+                                        var charCode = e.getCharCode();
+                                        if ((e.shiftKey && charCode >= 97 && charCode <= 122) ||
+                                            (!e.shiftKey && charCode >= 65 && charCode <= 90)) {{
+
+                                            field.capsWarningTooltip.enable();
+                                            field.capsWarningTooltip.show();
+                                        }}
+                                        else {{
+                                            if (field.capsWarningTooltip.hidden === false) {{
+                                                field.capsWarningTooltip.disable();
+                                                field.capsWarningTooltip.hide();
+                                            }}
+                                        }}
+                                    }},
+                                    scope:this
+                                }},
+
+                                blur:function (field) {{
+                                    if (field.capsWarningTooltip.hidden === false) {{
+                                        field.capsWarningTooltip.hide();
+                                    }}
+                                }}
+                            }}
+                        }}
+                    ]
+                }}
+            ],
+            buttons:[
+                {{
+                    action:""login"",
+                    formBind:true,
+                    text:'Login',
+                    iconCls:'form-login-icon-login',
+                    scale:'medium',
+                    width:90
+                }}
+            ]
+        }});
+        this.callParent(arguments);
+    }},
+    defaultFocus:'userName'
+}});
+";
+		
+		private string loginControllerTemplate=@"Ext.define('{0}.controller.Login',{{
+    extend:'Ext.app.Controller',
+    init:function () {{
+        this.control({{
+          
+            'login button[action=login]':{{
+                click:this.login
+            }},
+            'login textfield':{{
+                specialkey:this.keyenter
+            }}
+        }});
+    }},
+    views:[
+        'Login'
+    ],
+    refs:[
+         {{ref:'loginWindow', selector:'login'}},
+         {{ref:'loginForm', selector:'form'}}
+    ],
+    
+    login:function () {{
+    	var form = this.getLoginForm();
+    	if(!form.getForm().isValid()){{
+    		Aicl.Util.msg('Empty fields','please write username and password');
+    		return;
+    	}}
+        var me=this;
+    	var record = form.getValues();
+				Aicl.Util.login({{
+					success : function(result) {{
+						me.getLoginWindow().hide()
+						me.createMenu();
+					}},
+					failure : function(response, options) {{
+						console.log(arguments);
+					}},
+					params : record
+				}});
+    	
+    }},
+    
+    keyenter:function (item, event) {{
+        if (event.getKey() == event.ENTER) {{
+            this.login();
+        }}
+
+    }},
+    
+    createMenu: function(){{
+		var me = this;
+		var buttons=[];
+		var i=0;
+		var grupos = Aicl.Util.getRoles();
+		for(var grupo in grupos ){{
+			if(grupos[grupo].Directory){{
+				buttons[i]= Ext.create('Ext.Button', {{
+    				text    : grupos[grupo].Name,
+    				directory:grupos[grupo].Directory,
+    				scale   : 'small',
+    				handler	: function(){{
+    				Ext.getDom('iframe-win').src = 'modules/'+this.directory;
+    				}}
+				}});
+				i++;
+			}}
+		}};
+		
+		buttons[i]= Ext.create('Ext.Button', {{
+	    	text    : 'Salir',
+	    	scale   : 'small',
+	    	handler	: function(){{
+	    		Aicl.Util.logout({{
+	    			callback:function(result, success){{
+	    				vp.destroy();
+	    				me.getLoginWindow().show();
+	    			}}
+	    		}});
+	    	}}
+		}});
+		
+    	var vp=Ext.create('Ext.Viewport', {{
+        	layout: {{
+        		type: 'border',
+            	padding: 5
+        	}},
+        	defaults: {{
+            	split: true
+        	}},
+        	items: [{{
+            	region: 'west',
+            	layout:'fit',
+            	items:[{{
+            		layout: {{                        
+    	    			type: 'vbox',
+        				align:'stretch'
+    				}},
+    				defaults:{{margins:'5 5 5 5'}},
+        			items:buttons
+            	}}],
+            	collapsible: true,
+            	split: true,
+            	width: '20%'
+        	}},{{
+            	region: 'center',
+            	layout:'fit',
+            	items:[{{
+        			xtype : 'component',
+        			id    : 'iframe-win', 
+        			autoEl : {{
+	            		tag : 'iframe',
+            			src : 'intro.html'
+        			}}
+            	}}]
+        	}}]
+    	}});
+	}}
+    
+}});
+";
 		
 	}
 }
-
