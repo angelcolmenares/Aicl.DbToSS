@@ -20,9 +20,9 @@ namespace Aicl.DotJs.Ext
     constructor: function(config){{
     	config=config|| {{}};
     	config.frame=config.frame==undefined?false: config.frame;
-    	config.margin=config.margin|| '0 0 0 5';
-    	config.bodyStyle = config.bodyStyle ||'padding:10px 10px 0';
-    	config.width = config.width|| 360;
+    	config.margin=config.margin|| '0 0 0 5px';
+    	config.bodyStyle = config.bodyStyle ||'padding:0px 0px 0px 0px';
+    	config.width = config.width|| 365;
         config.height = config.height|| {4};
         config.autoScroll= config.autoScroll==undefined? true: config.autoScroll,
 		config.fieldDefaults = config.fieldDefaults || {{
@@ -149,13 +149,13 @@ namespace Aicl.DotJs.Ext
 				items.Add(item);
 			}
 			
-			int height = 80;
+			int height = 90;
 			
 			int ic= items.Count(i=>i.xtype!="'hidden'");
 			
-			if(ic==2) height=140;
+			if(ic==2) height=145;
 			else if (ic==3) height=150;
-			else if (ic==4) height=160;
+			else if (ic==4) height=170;
 			else if (ic>=5) height=40*ic;
 			if( height>350) height=350;
 			

@@ -89,6 +89,14 @@ namespace Aicl.DbToSS.CSharp
 			if(!Directory.Exists(hostWebDir))		
 				Directory.CreateDirectory(hostWebDir);
 			
+			
+			string logDir= Path.Combine( hostWebDir,"log");
+			
+			if(!Directory.Exists(logDir))		
+				Directory.CreateDirectory(logDir);
+			
+			
+			
 			using (TextWriter twp = new StreamWriter(Path.Combine(hostWebDir, "AppHost.cs")))
 			{
 				twp.Write(string.Format(appHostTemplate,SolutionName,ModelNameSpace,
@@ -139,6 +147,20 @@ namespace Aicl.DbToSS.CSharp
 				twp.Close();
 			}
 			
+			using (TextWriter twp = new StreamWriter(Path.Combine(hostWebDir, "log4net.conf")))
+			{
+				twp.Write(string.Format(log4NetTemplate,
+				                        Path.Combine(logDir, SolutionName+".log"),
+				                        Path.Combine(logDir, SolutionName+"-rolling.log")));				
+				twp.Close();
+			}
+			
+			if(! File.Exists(Path.Combine(logDir, SolutionName+".log")))
+				File.Create(Path.Combine(logDir, SolutionName+".log"));
+			
+			if(! File.Exists(Path.Combine(logDir, SolutionName+"-rolling.log")))
+				File.Create(Path.Combine(logDir, SolutionName+"-rolling.log"));
+			
 			using (TextWriter twp = new StreamWriter(Path.Combine(hostWebDir,
 			                            string.Format("{0}.{1}.csproj",SolutionName,HostWebNameSpace))))
 			{
@@ -164,6 +186,7 @@ using ServiceStack.Common.Utils;
 using ServiceStack.Configuration;
 using ServiceStack.Logging;
 using ServiceStack.Logging.Support.Logging;
+using ServiceStack.Logging.Log4Net ;
 using ServiceStack.OrmLite;
 using ServiceStack.WebHost.Endpoints;
 using ServiceStack.ServiceInterface.Auth;
@@ -182,8 +205,19 @@ namespace {0}.{4}
 		
 		public AppHost (): base(""{5}"", typeof(AuthenticationService).Assembly)
 		{{
-			LogManager.LogFactory = new ConsoleLogFactory();
+			var appSettings = new ConfigurationResourceManager();
+			if (appSettings.Get(""EnableLog4Net"", false))
+			{{
+				var cf=""log4net.conf"".MapHostAbsolutePath();
+				log4net.Config.XmlConfigurator.Configure(
+					new System.IO.FileInfo(cf));
+				LogManager.LogFactory = new  Log4NetFactory();
+			}}
+			else
+				LogManager.LogFactory = new ConsoleLogFactory();
+						
 			log = LogManager.GetLogger(typeof (AppHost));
+
 		}}
 		
 		public override void Configure(Container container)
@@ -243,7 +277,7 @@ namespace {0}.{4}
 				 () => new AuthUserSession(), // or Use your own typed Custom AuthUserSession type
 				new IAuthProvider[]
         	{{
-				new CredentialsAuthProvider()
+				new AuthenticationProvider()
         	}})
 			{{
 				IncludeAssignRoleServices=false
@@ -361,6 +395,7 @@ namespace {0}.{1}
 <!-- All changes from the default configuaration is prefixed by '[ServiceStack Specific]:' -->
 <configuration>
   <configSections>
+    <section name=""log4net"" type=""log4net.Config.Log4NetConfigurationSectionHandler,log4net"" />
   </configSections>
   <location path=""api"">
     <system.web>
@@ -457,7 +492,7 @@ namespace {0}.{1}
   <appSettings>
     <add key=""RedirectTo"" value=""WebApp"" />
 	<add key=""EnableRegistrationFeature"" value=""false""/>	
-        
+    <add key=""EnableLog4Net"" value=""false"" />    
   </appSettings>
   <connectionStrings>
     <add name=""ApplicationDb"" connectionString=""{0}"" />
@@ -529,6 +564,12 @@ namespace {0}.{1}
     <Reference Include=""ServiceStack.Text"">
       <HintPath>..\..\lib\ServiceStack.Text.dll</HintPath>
     </Reference>
+    <Reference Include=""log4net"">
+      <HintPath>..\..\lib\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include=""ServiceStack.Logging.Log4Net"">
+      <HintPath>..\..\lib\ServiceStack.Logging.Log4Net.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Content Include=""Global.asax"" />
@@ -571,6 +612,39 @@ namespace {0}.{1}
     </ProjectReference>
   </ItemGroup>
 </Project>";
+		
+		private string log4NetTemplate=@"<?xml version=""1.0"" encoding=""utf-8"" ?>
+<log4net debug=""false"">
+	<appender name=""LogFileAppender"" type=""log4net.Appender.FileAppender"" >
+		<file value=""{0}"" />
+		<appendToFile value=""true"" />
+		<layout type=""log4net.Layout.PatternLayout"">
+			<conversionPattern value=""%date [%thread] %-5level %logger [%ndc] - %message%newline"" />
+		</layout>
+	</appender>
+	<appender name=""HttpTraceAppender"" type=""log4net.Appender.AspNetTraceAppender"" >
+		<layout type=""log4net.Layout.PatternLayout"">
+			<conversionPattern value=""%date [%thread] %-5level %logger [%ndc] - %message%newline"" />
+		</layout>
+	</appender>
+	<appender name=""RollingLogFileAppender"" type=""log4net.Appender.RollingFileAppender"">
+		<file value=""{1}"" />
+		<appendToFile value=""true"" />
+		<maxSizeRollBackups value=""10"" />
+		<maximumFileSize value=""5MB"" />
+		<rollingStyle value=""Size"" />
+		<staticLogFileName value=""true"" />
+		<layout type=""log4net.Layout.PatternLayout"">
+			<conversionPattern value=""%date [%thread] %-5level %logger [%ndc] - %message%newline"" />
+		</layout>
+	</appender>
+	<root>
+		<level value=""DEBUG"" />
+		<appender-ref ref=""LogFileAppender"" />
+		<appender-ref ref=""HttpTraceAppender"" />
+		<!-- <appender-ref ref=""RollingLogFileAppender"" /> -->
+	</root>
+</log4net>";
 		
 	}
 }

@@ -48,7 +48,7 @@ namespace Aicl.DotJs.Ext
 		{
 			if(string.IsNullOrEmpty(AppName)) AppName="App";
 			
-			if(string.IsNullOrEmpty(Theme)) Theme="ext-all-slate.css";
+			if(string.IsNullOrEmpty(Theme)) Theme="ext-all.css";
 			
 			string solutionDir=Path.Combine(Directory.GetCurrentDirectory(), SolutionName);
 			
@@ -981,7 +981,7 @@ pre.code{{
 #module{{
 	margin-left:auto;
 	margin-right:auto;
-	width: 75em;
+	width: 79em;
 	text-align: left;
 }}
 
@@ -1262,7 +1262,7 @@ controllers: ['Login']
 		for(var grupo in grupos ){{
 			if(grupos[grupo].Directory){{
 				buttons[i]= Ext.create('Ext.Button', {{
-    				text    : grupos[grupo].Name,
+    				text    : grupos[grupo].Title,
     				directory:grupos[grupo].Directory,
     				scale   : 'small',
     				handler	: function(){{

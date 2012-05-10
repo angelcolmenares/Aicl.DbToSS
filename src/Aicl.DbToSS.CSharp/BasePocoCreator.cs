@@ -354,6 +354,7 @@ namespace {0}.{1}.Types
 		public string Directory {{ get; set;}}
 		public string ShowOrder {{ get; set;}}
 		public string Permission {{ get; set;}}
+		public string Title {{ get; set;}}
 	}}
 }}
 ";
@@ -389,6 +390,11 @@ namespace {0}.{1}.Types
 		[Alias(""SHOW_ORDER"")]
 		[StringLength(2)]
 		public System.String ShowOrder {{ get; set;}} 
+
+		[Alias(""TITLE"")]
+		[Required]
+		[StringLength(30)]
+		public System.String Title {{ get; set;}} 
 
 	}}
 }}";

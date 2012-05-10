@@ -248,7 +248,8 @@ namespace {0}.{2}
 			var1.Append(""SELECT b.ID as \""IdRole\"",\n b.name       AS \""Role\"", \n"");
 			var1.Append(""       b.directory  AS \""Directory\"", \n"");
 			var1.Append(""       b.show_order AS \""ShowOrder\"", \n"");
-			var1.Append(""       d.name       AS \""Permission\"" \n"");
+			var1.Append(""       d.name       AS \""Permission\"", \n"");
+			var1.Append(""       b.title  AS \""Title\"" \n"");
 			var1.Append(""FROM   auth_role_user a \n"");
 			var1.Append(""       JOIN auth_role b \n"");
 			var1.Append(""         ON b.id = a.id_auth_role \n"");
@@ -278,7 +279,8 @@ namespace {0}.{2}
 					Id= id,
 					Name= gr.Role,
 					Directory=gr.Directory,
-					ShowOrder=gr.ShowOrder
+					ShowOrder=gr.ShowOrder,
+					Title= gr.Title
 				}});
 			}}
 			
