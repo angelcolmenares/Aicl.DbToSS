@@ -69,10 +69,10 @@ namespace Aicl.DbToSS.CSharp
 			set;
 		}
 						
-		private string OutputDirectory
+		public string OutputDirectory
 		{
 			get;
-			set;
+			private set;
 		}
 		
 		public string OutputAssembly{

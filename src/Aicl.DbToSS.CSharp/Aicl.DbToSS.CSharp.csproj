@@ -72,9 +72,13 @@
     <Compile Include="DotJs.Ext\ExtSolutionCreator.cs" />
     <Compile Include="Util.cs" />
     <Compile Include="SetupCreator.cs" />
+    <Compile Include="Sql\SqlPermissionsCreator.cs" />
+    <Compile Include="Sql\SqlRolesCreator.cs" />
+    <Compile Include="Sql\SqlCreator.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <Folder Include="Properties\" />
+    <Folder Include="Sql\" />
   </ItemGroup>
 </Project>

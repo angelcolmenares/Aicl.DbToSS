@@ -103,7 +103,7 @@ namespace {0}.{1}
 {{
 	public class Factory
 	{{
-		public IDbConnectionFactory DbFactory {{get;set;}}
+		public IDbConnectionFactory DbFactory {{internal get;set;}}
 		
 		public Factory ()
 		{{
@@ -242,7 +242,7 @@ namespace {0}.{2}
 	{{
 				
 		public static AuthorizationResponse GetRolesAndPermissions(this Authorization request, 
-		                                           IDbConnectionFactory DbFactory){{
+		                                           Factory factory){{
 			
 			StringBuilder  var1 = new StringBuilder();
 			var1.Append(""SELECT b.ID as \""IdRole\"",\n b.name       AS \""Role\"", \n"");
@@ -259,7 +259,7 @@ namespace {0}.{2}
 			var1.Append(""         ON d.id = c.id_auth_permission \n"");
 			var1.AppendFormat(""WHERE  a.id_userauth = '{{0}}' order by \""ShowOrder\""  "", request.UserId);
 			
-			List<RoleAndPermission> ur= DbFactory.Exec(dbCmd=> dbCmd.Select<RoleAndPermission>
+			List<RoleAndPermission> ur= factory.DbFactory.Exec(dbCmd=> dbCmd.Select<RoleAndPermission>
 			                      (var1.ToString()));
 						
 			List<string> permissions = ((from s in ur

@@ -263,8 +263,8 @@ namespace {0}.Setup
 			    }}, password);
 			}}
 			
-			userName = ""user1"";
-			password = ""user1"";
+			userName = ""test1"";
+			password = ""test1"";
 		
 			permissions= new List<string>(
 			new string[]{{	
@@ -273,6 +273,7 @@ namespace {0}.Setup
 			
 			if ( authRepo.GetUserAuthByUserName(userName)== default(UserAuth) ){{
 				List<string> roles= new List<string>();
+				roles.Add(""Test"");
 				string hash;
 			    string salt;
 			    new SaltedHash().GetHashAndSaltString(password, out hash, out salt);

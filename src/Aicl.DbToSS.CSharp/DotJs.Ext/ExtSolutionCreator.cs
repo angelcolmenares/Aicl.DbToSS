@@ -38,10 +38,10 @@ namespace Aicl.DotJs.Ext
 		}
 		
 		
-		private string OutputDirectory
+		public  string OutputDirectory
 		{
 			get;
-			set;
+			private set;
 		}
 		
 		public virtual void Write()

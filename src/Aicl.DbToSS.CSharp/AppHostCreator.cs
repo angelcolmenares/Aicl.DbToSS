@@ -181,6 +181,7 @@ using System.Configuration;
 using Funq;
 using ServiceStack.CacheAccess;
 using ServiceStack.CacheAccess.Providers;
+using ServiceStack.Redis;
 using ServiceStack.Common.Web;
 using ServiceStack.Common.Utils;
 using ServiceStack.Configuration;
@@ -270,14 +271,36 @@ namespace {0}.{4}
 		}}
 		
 		private void ConfigureAuth(Container container){{
-			
-			container.Register<ICacheClient>(new MemoryCacheClient());
+
+			var appSettings = new ConfigurationResourceManager();
+			double se= appSettings.Get(""DefaultSessionExpiry"", 480);
+			AuthProvider.DefaultSessionExpiry=TimeSpan.FromMinutes(se);			
+
+			if (appSettings.Get(""EnableRedis"", false)){{
+				string cacheHost= appSettings.Get(""CacheHost"", ""localhost:6379"");			
+				int cacheDb= appSettings.Get(""CacheDb"",8);				
+										
+				string cachePassword= appSettings.Get(""CachePassword"",string.Empty);
+						
+				var p = new PooledRedisClientManager(new string[]{{cacheHost}},
+							new string[]{{cacheHost}},
+							cacheDb); 
+				
+				if(! string.IsNullOrEmpty(cachePassword))
+					p.GetClient().Password= cachePassword;
+				
+				container.Register<ICacheClient>(p);
+			}}
+			else
+			{{
+				container.Register<ICacheClient>(new MemoryCacheClient());	
+			}}
 			
 			Plugins.Add(new AuthFeature(
 				 () => new AuthUserSession(), // or Use your own typed Custom AuthUserSession type
 				new IAuthProvider[]
         	{{
-				new AuthenticationProvider()
+				new AuthenticationProvider(){{SessionExpiry=TimeSpan.FromMinutes(se)}}
         	}})
 			{{
 				IncludeAssignRoleServices=false
@@ -293,8 +316,6 @@ namespace {0}.{4}
 				c => authRepo
 			); //Use OrmLite DB Connection to persist the UserAuth and AuthProvider info
 
-			var appSettings = new ConfigurationResourceManager();
-			
 			if (appSettings.Get(""EnableRegistrationFeature"", false))
 				Plugins.Add( new  RegistrationFeature());
 						
@@ -493,6 +514,11 @@ namespace {0}.{1}
     <add key=""RedirectTo"" value=""WebApp"" />
 	<add key=""EnableRegistrationFeature"" value=""false""/>	
     <add key=""EnableLog4Net"" value=""false"" />    
+	<add key=""DefaultSessionExpiry"" value=""480"" />    <!-- minutes !-->
+	<add key=""EnableRedis"" value=""false"" />
+	<add key=""CacheHost"" value=""localhost:6379"" />
+	<add key=""CacheDb"" value=""8"" />
+	<add key=""CachePassword"" value="""" />	
   </appSettings>
   <connectionStrings>
     <add name=""ApplicationDb"" connectionString=""{0}"" />
@@ -569,6 +595,9 @@ namespace {0}.{1}
     </Reference>
     <Reference Include=""ServiceStack.Logging.Log4Net"">
       <HintPath>..\..\lib\ServiceStack.Logging.Log4Net.dll</HintPath>
+    </Reference>
+	<Reference Include=""ServiceStack.Redis"">
+      <HintPath>..\..\lib\ServiceStack.Redis.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

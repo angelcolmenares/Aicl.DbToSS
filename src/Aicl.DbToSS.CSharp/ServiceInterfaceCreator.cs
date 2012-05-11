@@ -137,6 +137,13 @@ namespace Aicl.DbToSS.CSharp
 				twp.Close();
 			}
 			
+			using (TextWriter twp = new StreamWriter(Path.Combine(interfaceDir, "RequiresAuthenticateAttribute.cs")))
+			{
+				twp.Write(string.Format(requiresAuthenticateTemplate ,SolutionName,ServiceNameSpace));				
+				twp.Close();
+			}
+			
+			
 			using (TextWriter twp = new StreamWriter(Path.Combine(interfaceDir, "PermissionAttribute.cs")))
 			{
 				twp.Write(string.Format(permissionTemplate,SolutionName,ServiceNameSpace));				
@@ -171,11 +178,11 @@ using {0}.{1}.Operations;
 
 namespace {0}.{2}
 {{
-	[Authenticate]
-	[RequiredPermission(""{3}.read"")]
-	[RequiredPermission(ApplyTo.Post, ""{3}.create"")]	
-	[RequiredPermission(ApplyTo.Put , ""{3}.update"")]	
-	[RequiredPermission(ApplyTo.Delete, ""{3}.destroy"")]
+	[RequiresAuthenticate]
+	[Permission(""{3}.read"")]
+	[Permission(ApplyTo.Post, ""{3}.create"")]	
+	[Permission(ApplyTo.Put , ""{3}.update"")]	
+	[Permission(ApplyTo.Delete, ""{3}.destroy"")]
 	public class {3}Service:AppRestService<{3}>
 	{{
 	}}
@@ -364,12 +371,12 @@ namespace {0}.{3}
 				UserId= int.Parse(session.UserAuthId)
 			}};
 			
-			AuthorizationResponse aur = auth.GetRolesAndPermissions(Factory.DbFactory);
+			AuthorizationResponse aur = auth.GetRolesAndPermissions(Factory);
 			
 			session.Permissions= aur.Permissions;
 			session.Roles= (from r in aur.Roles select r.Name).ToList();
 			
-			authService.SaveSession(session, TimeSpan.FromDays(1));
+			authService.SaveSession(session);
 			
 			return new AuthenticationResponse(){{
 				DisplayName= session.DisplayName.IsNullOrEmpty()? session.UserName: session.DisplayName,
@@ -412,7 +419,7 @@ using {0}.{2};
 
 namespace {0}.{3}
 {{
-	[Authenticate]
+	[RequiresAuthenticate]
 	public class AuthorizationService:RestServiceBase<Authorization>
 	{{
 		public Factory Factory{{ get; set;}}
@@ -425,7 +432,7 @@ namespace {0}.{3}
 			{{
 				request.UserId= int.Parse(session.UserAuthId);
 			}}
-			return  request.GetRolesAndPermissions(Factory.DbFactory);
+			return  request.GetRolesAndPermissions(Factory);
 			 
 		}}
 		
@@ -504,7 +511,11 @@ namespace {0}.{1}
 			AuthenticateAttribute.AuthenticateIfBasicAuth(req, res);
 
 			var session = req.GetSession();
-			if (HasAllPermissions(session)) return;
+			
+			if(session!=null)
+			{{
+				if (HasAllPermissions(session)) return;
+			}}
 
 			res.StatusCode = (int)HttpStatusCode.Unauthorized;
 			res.StatusDescription = ""Invalid Permissions"";
@@ -540,7 +551,11 @@ namespace {0}.{1}
 			AuthenticateAttribute.AuthenticateIfBasicAuth(req, res);
 
 			var session = req.GetSession();
-			if (HasAllRoles(session)) return;
+
+			if(session!=null)
+			{{
+				if (HasAllRoles(session)) return;
+			}}
 
 			res.StatusCode = (int)HttpStatusCode.Unauthorized;
 			res.StatusDescription = ""Invalid Role"";
@@ -594,14 +609,18 @@ namespace {0}.{1}
 			}}
 			return false;
 		}}
-		
+		/*
 		public override void OnAuthenticated (ServiceStack.ServiceInterface.IServiceBase authService, IAuthSession session, IOAuthTokens tokens, Dictionary<string, string> authInfo)
-		{{		
-			
+		{{			
 			base.OnAuthenticated (authService, session, tokens, authInfo);
-			
 		}}
-		
+		*/
+		/*
+		public override bool IsAuthorized(IAuthSession session, IOAuthTokens tokens, Auth request=null)
+		{{
+			return base.IsAuthorized(session, tokens, request);
+		}}
+		*/
 		public override object Authenticate(IServiceBase authService, IAuthSession session, Auth request)
 		{{
 			new CredentialsAuthValidator().ValidateAndThrow(request);
@@ -632,6 +651,47 @@ namespace {0}.{1}
 			throw HttpError.Unauthorized(""Invalid UserName or Password"");
 		}}		
 		
+	}}
+}}";
+		
+		private string requiresAuthenticateTemplate=@"using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Linq;
+﻿using ServiceStack.CacheAccess;
+using ServiceStack.Common;
+using ServiceStack.ServiceHost;
+using ServiceStack.ServiceInterface;
+using ServiceStack.ServiceInterface.Auth;
+
+namespace {0}.{1}
+{{
+	public class RequiresAuthenticateAttribute:AuthenticateAttribute
+	{{
+	
+		public RequiresAuthenticateAttribute(ApplyTo applyTo)
+			: base(applyTo)	{{}}
+
+		public RequiresAuthenticateAttribute()
+			: base(ApplyTo.All) {{}}
+
+		public RequiresAuthenticateAttribute(string provider)
+			: this(ApplyTo.All)	{{}}
+
+		public RequiresAuthenticateAttribute(ApplyTo applyTo, string provider)
+			: this(applyTo)	{{}}
+		
+		
+		public override void Execute(IHttpRequest req, IHttpResponse res, object requestDto)
+		{{
+			base.Execute(req, res, requestDto);
+			var session = req.GetSession();
+			if(session!=null && session.IsAuthenticated)
+			{{
+				req.SaveSession(session);// refresh session TTL
+			}}
+		}}
+	
 	}}
 }}";
 		
@@ -696,6 +756,7 @@ namespace {0}.{1}
     <Compile Include=""AppRestService.cs"" />
     <Compile Include=""PermissionAttribute.cs"" />
     <Compile Include=""RoleAttribute.cs"" />
+	<Compile Include=""RequiresAuthenticateAttribute.cs"" />
     <Compile Include=""AuthenticationService.cs"" />
     <Compile Include=""AuthorizationService.cs"" />
 	<Compile Include=""AuthenticationProvider.cs"" />
