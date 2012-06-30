@@ -430,7 +430,6 @@ namespace {0}.{1}
       </handlers>
     </system.webServer>
   </location>
-  <httpRuntime executionTimeout=""900"" maxRequestLength=""4096"" useFullyQualifiedRedirectUrl=""false"" minFreeThreads=""8"" minLocalRequestFreeThreads=""4"" appRequestQueueLimit=""100"" />
   <system.web>
     <!-- 
             Set compilation debug=""true"" to insert debugging 
@@ -464,6 +463,7 @@ namespace {0}.{1}
             <error statusCode=""404"" redirect=""FileNotFound.htm"" />
         </customErrors>
         -->
+    <customErrors mode=""Off"" />
     <pages>
       <controls>
         <add tagPrefix=""asp"" namespace=""System.Web.UI"" assembly=""System.Web.Extensions, Version=3.5.0.0, Culture=neutral, PublicKeyToken=31BF3856AD364E35"" />
