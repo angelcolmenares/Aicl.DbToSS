@@ -13,11 +13,11 @@ namespace Aicl.DotJs.Ext
     models: ['{2}'],
     views:  ['{3}.List','{3}.Form' ],
     refs:[
-    	{{ref: '{3}List',    	 selector: '{3}list' }},
-    	{{ref: '{3}DeleteButton', selector: '{3}list button[action=delete]' }},
-    	{{ref: '{3}NewButton',    selector: '{3}list button[action=new]' }},
-    	{{ref: '{3}Form',    	 selector: '{3}form' }}, 
-    	{{ref: '{3}SaveButton', 	 selector: '{3}form button[action=save]' }}
+    	{{ref: '{4}List',    	 selector: '{3}list' }},
+    	{{ref: '{4}DeleteButton', selector: '{3}list button[action=delete]' }},
+    	{{ref: '{4}NewButton',    selector: '{3}list button[action=new]' }},
+    	{{ref: '{4}Form',    	 selector: '{3}form' }}, 
+    	{{ref: '{4}SaveButton', 	 selector: '{3}form button[action=save]' }}
     ],
 
     init: function(application) {{
@@ -172,7 +172,9 @@ namespace Aicl.DotJs.Ext
 			
 			using (TextWriter tw = new StreamWriter(Path.Combine(controlerDir, FileName)))
 			{
-				tw.Write(string.Format(template, Define, Extend, type.Name, type.Name.ToLower()));
+				tw.Write(string.Format(template, Define, Extend, type.Name, type.Name.ToLower(),
+                                       char.ToLower(type.Name[0]) + type.Name.Substring(1)
+                                       ));
 				tw.Close();
 			}
 			

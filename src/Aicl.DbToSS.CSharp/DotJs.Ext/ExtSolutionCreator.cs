@@ -226,8 +226,7 @@ Ext.onReady(function() {{
 					directory : grupos[grupo].dir,
 					scale : 'large',
 					handler : function() {{
-						Ext.getDom('iframe-win').src = 'modules/'
-								+ this.directory;
+						Ext.getDom('iframe-win').src=Aicl.Util.getUrlModules()+'/'+this.directory;
 					}}
 				}});
 		i++;
@@ -541,19 +540,19 @@ Ext.onReady(function() {{
 			config.type= config.type || 'rest';
 			
 			config.api=config.api||{{}};
-			config.api.create=config.api.create|| config.url+'/create';
-			config.api.read=config.api.read|| config.url+'/read';
-			config.api.update=config.api.update|| config.url+'/update';
-			config.api.destroy=config.api.destroy|| config.url+'/destroy';
-			config.url= config.url || Aicl.Util.getUrlApi()+'/' + config.storeId;
-			
+            config.url= config.url || (Aicl.Util.getUrlApi()+'/' + config.storeId);
+			config.api.create=config.api.create|| (config.url+'/create');
+			config.api.read=config.api.read|| (config.url+'/read');
+			config.api.update=config.api.update|| (config.url+'/update');
+			config.api.destroy=config.api.destroy|| (config.url+'/destroy');
+						
 			return this.createProxy(config);
 			
 		}},
 		
 		createAjaxProxy:function (config){{
 			config.type=config.type||'ajax';
-			config.url= config.url || Aicl.Util.getHttpUrlApi()+'/' + config.storeId;
+			config.url= config.url || (Aicl.Util.getHttpUrlApi()+'/' + config.storeId);
 			var proxy= this.createProxy(config);
 			proxy.actionMethods= {{create: ""POST"", read: ""GET"", update: ""PUT"", destroy: ""DELETE""}};
 			return proxy;
@@ -662,6 +661,14 @@ Ext.onReady(function() {{
 			return sessionStorage.roles? Ext.decode(sessionStorage.roles): [];		
 		}},
 		
+        setUrlModules: function (urlModules){
+            sessionStorage[""urlModules""]=urlModules;
+        },
+        
+        getUrlModules:function (){
+            return sessionStorage[""urlModules""];
+        },
+
 		setUrlLogin: function (urlLogin){{
 			sessionStorage[""urlLogin""]=urlLogin;
 		}},
@@ -1066,6 +1073,7 @@ name: '{0}',
 appFolder: 'modules/app',
 
 launch: function(){{
+    Aicl.Util.setUrlModules(location.protocol + '//' + location.host + '/WebApp/modules');
 	Aicl.Util.setUrlApi(location.protocol + '//' + location.host + '/api');
 	Aicl.Util.setHttpUrlApi(location.protocol + '//' + location.host + '/api'+'/json/asynconeway')
 		
@@ -1266,7 +1274,7 @@ controllers: ['Login']
     				directory:grupos[grupo].Directory,
     				scale   : 'small',
     				handler	: function(){{
-    				Ext.getDom('iframe-win').src = 'modules/'+this.directory;
+    				Ext.getDom('iframe-win').src=Aicl.Util.getUrlModules()+'/'+this.directory;
     				}}
 				}});
 				i++;

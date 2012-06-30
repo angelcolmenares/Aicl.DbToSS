@@ -9,7 +9,7 @@ namespace Demo
 		public static void Main (string[] args)
 		{
 			Console.WriteLine ("Hello World!");
-			
+	/*
 			
 			CSharpSolutionCreator solution= new CSharpSolutionCreator(){
 				ConnectionString="User=SYSDBA;Password=masterkey;Database=Aicl.Galapago.fdb;DataSource=localhost;Dialect=3;charset=ISO8859_1;",
@@ -40,7 +40,33 @@ namespace Demo
 				NameSpace=ext.NameSpace
 			};
 			sqlCreator.Write();
+   */       
+
+            string assembly ="/home/angel/Projects/github/Aicl.Colmetrik/gh/src/Aicl.Colmetrik.Model/bin/Debug/Aicl.Colmetrik.Model.dll";
+
+            ExtSolutionCreator ext = new ExtSolutionCreator(){
+                AppTitle="Colmetrik Pedidos",
+                AssemblyName= assembly,
+                Theme="ext-all-gray.css",
+                SolutionName="Aicl.Colmetrik",
+                NameSpace=string.Format("{0}.{1}.Types","Aicl.Colmetrik", "Model"),
+                ExtDir="/home/angel/Projects/librerias/extjs/extjs"
+                
+            };
+            
+            ext.Write();
+            
+            
+            SqlCreator sqlCreator= new SqlCreator(){
+                AssemblyName=assembly,
+                SolutionName="Aicl.Colmetrik",
+                NameSpace=ext.NameSpace
+            };
+            sqlCreator.Write();
+
+
 			Console.WriteLine ("This is The End my friend!");
+
 			
 		}
 	}
