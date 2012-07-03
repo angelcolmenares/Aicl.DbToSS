@@ -42,14 +42,14 @@ namespace Demo
 			sqlCreator.Write();
    */       
 
-            string assembly ="/home/angel/Projects/github/Aicl.Colmetrik/gh/src/Aicl.Colmetrik.Model/bin/Debug/Aicl.Colmetrik.Model.dll";
+            string assembly ="/home/angel/Projects/github/Aicl.Galapago/gh/src/Aicl.Galapago.Model/bin/Debug/Aicl.Galapago.Model.dll";
 
             ExtSolutionCreator ext = new ExtSolutionCreator(){
-                AppTitle="Colmetrik Pedidos",
+                AppTitle="Galapago Gestion Ingresos y Gastos",
                 AssemblyName= assembly,
                 Theme="ext-all-gray.css",
-                SolutionName="Aicl.Colmetrik",
-                NameSpace=string.Format("{0}.{1}.Types","Aicl.Colmetrik", "Model"),
+                SolutionName="Aicl.Galapago",
+                NameSpace=string.Format("{0}.{1}.Types","Aicl.Galapago", "Model"),
                 ExtDir="/home/angel/Projects/librerias/extjs/extjs"
                 
             };
@@ -59,7 +59,7 @@ namespace Demo
             
             SqlCreator sqlCreator= new SqlCreator(){
                 AssemblyName=assembly,
-                SolutionName="Aicl.Colmetrik",
+                SolutionName="Aicl.Galapago",
                 NameSpace=ext.NameSpace
             };
             sqlCreator.Write();
