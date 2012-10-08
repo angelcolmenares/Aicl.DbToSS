@@ -42,14 +42,15 @@ namespace Demo
 			sqlCreator.Write();
    */       
 
-            string assembly ="/home/angel/Projects/github/Aicl.Galapago/gh/src/Aicl.Galapago.Model/bin/Debug/Aicl.Galapago.Model.dll";
+            //string assembly ="/home/angel/Projects/github/Aicl.Galapago/gh/src/Aicl.Galapago.Model/bin/Debug/Aicl.Galapago.Model.dll";
+			string assembly ="/home/angel/Projects/github/Aicl.Delfin/gh/src/Aicl.Delfin.Model/bin/Debug/Aicl.Delfin.Model.dll";
 
             ExtSolutionCreator ext = new ExtSolutionCreator(){
-                AppTitle="Galapago Gestion Ingresos y Gastos",
+                AppTitle="Delfin Gestion de Pedidos metrologia, calibracion, etc",
                 AssemblyName= assembly,
                 Theme="ext-all-gray.css",
-                SolutionName="Aicl.Galapago",
-                NameSpace=string.Format("{0}.{1}.Types","Aicl.Galapago", "Model"),
+                SolutionName="Aicl.Delfin",
+                NameSpace=string.Format("{0}.{1}.Types","Aicl.Delfin", "Model"),
                 ExtDir="/home/angel/Projects/librerias/extjs/extjs"
                 
             };
@@ -59,7 +60,7 @@ namespace Demo
             
             SqlCreator sqlCreator= new SqlCreator(){
                 AssemblyName=assembly,
-                SolutionName="Aicl.Galapago",
+                SolutionName="Aicl.Delfin",
                 NameSpace=ext.NameSpace
             };
             sqlCreator.Write();
